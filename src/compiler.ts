@@ -227,7 +227,7 @@ function compileRouteMatch(ctx: CompilerContext): string {
       ? `if(p.includes("/.")){let _r=[],_v;for(_v of p.split("/")){if(_v===".")continue;if(_v==="..")_r.length>1&&_r.pop();else _r.push(_v)}if(_v==="."||_v==="..")_r.push("");p=_r.join("/")||"/"}`
       : "";
     const strip = `if(p.charCodeAt(p.length-1)===47)p=p.slice(0,-1);`;
-    let retCode = `{data:${data},params:w?{"0":w,_:w}:{}}`;
+    let retCode = `{data:${data},params:p?{"0":w,_:w}:{}}`;
     if (ctx.opts?.matchAll) {
       retCode = `[${retCode}]`;
     }

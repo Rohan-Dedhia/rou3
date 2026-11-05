@@ -218,14 +218,14 @@ describe("compiler: single /** route optimization", () => {
 
     const codeMatchAll = compileRouterToString(router, { matchAll: true });
     expect(codeMatchAll).not.toContain('split("/")');
-    expect(codeMatchAll).toContain('[{data:$0,params:w?{"0":w,_:w}:{}}]');
+    expect(codeMatchAll).toContain('[{data:$0,params:p?{"0":w,_:w}:{}}]');
 
     const jit = compileRouter(router);
     const aot = evalAOT(code);
     const jitAll = compileRouter(router, { matchAll: true });
     const aotAll = evalAOT(codeMatchAll);
 
-    const testPaths = ["/", "/foo", "/foo/", "/foo/bar", "/foo/bar/", ""];
+    const testPaths = ["/", "//", "///", "/foo", "/foo/", "/foo/bar", "/foo/bar/", ""];
     for (const path of testPaths) {
       const expected = findRoute(router, "GET", path);
       expect(jit("GET", path)).toEqual({ data: expected!.data, params: expected!.params });
@@ -236,6 +236,26 @@ describe("compiler: single /** route optimization", () => {
         expectedAll.map((r) => ({ data: r.data, params: r.params })),
       );
       expect(aotAll("GET", path)).toEqual(
+        expectedAll.map((r) => ({ data: r.data, params: r.params })),
+      );
+    }
+
+    const normJit = compileRouter(router, { normalize: true });
+    const normAot = evalAOT(compileRouterToString(router, { normalize: true }));
+    const normJitAll = compileRouter(router, { normalize: true, matchAll: true });
+    const normAotAll = evalAOT(compileRouterToString(router, { normalize: true, matchAll: true }));
+
+    const normTestPaths = ["/.", "/./", "/../", "/a/./b", "/a/../b", "/a/b/..", "/a/b/../"];
+    for (const path of normTestPaths) {
+      const expected = findRoute(router, "GET", path, { normalize: true });
+      expect(normJit("GET", path)).toEqual({ data: expected!.data, params: expected!.params });
+      expect(normAot("GET", path)).toEqual({ data: expected!.data, params: expected!.params });
+
+      const expectedAll = findAllRoutes(router, "GET", path, { normalize: true });
+      expect(normJitAll("GET", path)).toEqual(
+        expectedAll.map((r) => ({ data: r.data, params: r.params })),
+      );
+      expect(normAotAll("GET", path)).toEqual(
         expectedAll.map((r) => ({ data: r.data, params: r.params })),
       );
     }
